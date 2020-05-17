@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "fifo.h"
+
 #define FIFO_MIN(a,b) ((a)<(b)?(a):(b))
 #define FIFO_MAX(a,b) ((a)>(b)?(a):(b))
 
@@ -24,21 +26,6 @@
 #else
     #define FIFO_LOG(format, ...)
 #endif
-
-typedef enum {
-    un_lock = 0,
-    write_lock = 1,
-    read_lock = 2,
-    locked = 3,
-}lock_t;
-
-typedef struct{
-    lock_t          lock;
-    uint8_t*        pdata;
-    uint32_t        fifo_size;
-    uint32_t        write_index;
-    uint32_t        read_index;
-}fifo_t;
 
 /** 
  * @brief       fifo初始化
@@ -171,46 +158,3 @@ int32_t pull_data_from_fifo(fifo_t* fifo, uint8_t* p_data, uint32_t len)
     }
 }
 
-
-int main(void)
-{
-    fifo_t test_fifo;
-    uint8_t buffer[64] = {0};
-
-    fifo_init(&test_fifo,64,buffer);
-    printf("fifo size = %d\n",test_fifo.fifo_size);
-
-    for(uint8_t i = 0; i < 30; i++)
-    {
-        push_data_to_fifo(&test_fifo,&i,1);
-    }
-    printf("now use size is %d, remain size is %d\n",fifo_used_size(&test_fifo),fifo_remain_size(&test_fifo));
-        
-    uint8_t temp_data = 0;
-    while(pull_data_from_fifo(&test_fifo,&temp_data,1) >= 0)
-    {
-        printf("read data is %d\n",temp_data);
-    }
-
-    for(uint8_t i = 30; i < 80; i++)
-    {
-        push_data_to_fifo(&test_fifo,&i,1);
-    }
-    printf("now use size is %d, remain size is %d\n",fifo_used_size(&test_fifo),fifo_remain_size(&test_fifo));
-
-    while(pull_data_from_fifo(&test_fifo,&temp_data,1) >= 0)
-    {
-        printf("read data is %d\n",temp_data);
-    }
-    
-    printf("now use size is %d, remain size is %d\n",fifo_used_size(&test_fifo),fifo_remain_size(&test_fifo));
-    uint8_t temp[158] = {0,5,4,68,1,2,88,22,5,95,8,5,78,11,52,1,7,1};
-    push_data_to_fifo(&test_fifo,temp,sizeof(temp));
-    printf("now use size is %d, remain size is %d\n",fifo_used_size(&test_fifo),fifo_remain_size(&test_fifo));
-    while(pull_data_from_fifo(&test_fifo,&temp_data,1) >= 0)
-    {
-        printf("read data is %d\n",temp_data);
-    }
-    printf("now use size is %d, remain size is %d\n",fifo_used_size(&test_fifo),fifo_remain_size(&test_fifo));
-    return 0;
-}
